@@ -19,22 +19,22 @@ The random dataset generator will be written in ==Python==.
 
 One person per programming language.
 
-Java: Danial
-C++: Abdalla
+- Java: Danial
+- C++: Abdalla
 
 #### Quick Sort Algorithm (Code)
 
 One person per programming language.
 
-Java: Anas
-C++: Nick
+- Java: Anas
+- C++: Nick
 
 #### Binary Search Algorithm (Code)
 
 Two people per programming language.
 
-Java: Anas & Danial
-C++: Abdalla & Nick
+- Java: Anas & Danial
+- C++: Abdalla & Nick
 
 ## Presentation
 
