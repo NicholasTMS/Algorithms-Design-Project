@@ -43,11 +43,6 @@ void quickSort(DataRow arr[], int low, int high) {
 // count how many lines are in the CSV
 int countRows(const string &filename) {
     ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Error: cannot open file for counting: " << filename << endl;
-        return 0;
-    }
-
     int count = 0;
     string line;
     while (getline(file, line)) {
@@ -61,12 +56,6 @@ int countRows(const string &filename) {
 
 void readCSVToArray(const string &filename, DataRow arr[], int rowCount) {
     ifstream file(filename);
-    
-    if (!file.is_open()) {
-        cerr << "Error: cannot open file for reading: " << filename << endl;
-        return;
-    }
-
     string line;
     int idx = 0;
     while (getline(file, line) && idx < rowCount) {
@@ -91,11 +80,6 @@ void printDataset(const DataRow arr[], int rowCount) {
 
 void writeDatasetToFile(const string &outputFilename, const DataRow arr[], int rowCount) {
     ofstream outFile(outputFilename);
-    if (!outFile.is_open()) {
-        cerr << "Error: cannot open output file: " << outputFilename << endl;
-        return;
-    }
-
     for (int i = 0; i < rowCount; ++i) {
         outFile << arr[i].number << "," << arr[i].text << "\n";
     }
