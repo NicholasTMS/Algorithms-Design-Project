@@ -9,7 +9,7 @@ struct DataRow {
     string text;
 };
 
-// Count non‐empty lines in the CSV
+// count rows in CSV
 int countRows(const string &filename) {
     ifstream file(filename);
     int count = 0;
@@ -21,7 +21,7 @@ int countRows(const string &filename) {
     return count;
 }
 
-// Read exactly rowCount lines from CSV into arr[]
+// read each row into arr[]
 void readCSVToArray(const string &filename, DataRow arr[], int rowCount) {
     ifstream file(filename);
     string line;
@@ -39,7 +39,7 @@ void readCSVToArray(const string &filename, DataRow arr[], int rowCount) {
     file.close();
 }
 
-// Binary search with step logging
+// binary search with some loggning
 void binarySearchWithLogging(const DataRow dataset[], int rowCount, int target) {
     ostringstream filenameStream;
     filenameStream << "binary_search_step_" << target << ".txt";
@@ -52,7 +52,7 @@ void binarySearchWithLogging(const DataRow dataset[], int rowCount, int target) 
     while (low <= high) {
         int mid = (low + high) / 2;
 
-        // Log current step (1-based index for row number)
+        // log current step 
         logFile << (mid + 1) << ": " << dataset[mid].number << "/" << dataset[mid].text << "\n";
 
         if (dataset[mid].number == target) {
