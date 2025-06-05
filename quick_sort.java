@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -26,19 +23,18 @@ class DataRow {
 public class quick_sort {
     // Main program
     public static void main(String[] args) {
-        File file = null;
+        // Check that argument is provided
+        if (args.length == 0) {
+            System.out.println("Error: Please enter file to be sorted into the argument");
+            System.exit(1);
+        }
 
-        if (args.length == 0)
-            file = new File("dataset_sample_1000.csv");
-        else
-            file = new File(args[0]);
+        String fileName = args[0];
 
+        File file = new File(fileName);
         ArrayList<DataRow> dataList = new ArrayList<DataRow>();
 
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner(file);
-
+        try (Scanner scanner = new Scanner(file)) {
             // Reading loop
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
@@ -47,14 +43,26 @@ public class quick_sort {
                 dataList.add(d);
             }
 
+            // Run quick sort on the data
             quickSort(dataList);
 
-            for (DataRow dataRow : dataList) {
-                System.out.println(dataRow.getNumbers() + ", " + dataRow.getCharacters());
+            // Write the sorted array into the CSV file
+            try {
+                String[] splitFileName = fileName.split("_");
+                FileWriter writer = new FileWriter("quick_sort" + "_" + splitFileName[2]);
+
+                for (DataRow dataRow : dataList) {
+                    writer.write(dataRow.getNumbers() + "," + dataRow.getCharacters() + "\n");
+                }
+
+                writer.close();
+            }
+            catch (IOException error) {
+                System.out.println("An error occured: " + error.getMessage());
             }
         }
         catch (FileNotFoundException e) {
-            System.out.println("Error: Could not find the file");
+            System.out.println("Error: Could not find the file " + args[0]);
             System.exit(1);
         }
     }
