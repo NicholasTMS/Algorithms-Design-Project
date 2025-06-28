@@ -29,6 +29,9 @@ public class quick_sort {
             System.exit(1);
         }
 
+        // Log system start time
+        long startTime = System.nanoTime();
+
         String fileName = args[0];
 
         File file = new File(fileName);
@@ -60,6 +63,18 @@ public class quick_sort {
             catch (IOException error) {
                 System.out.println("An error occured: " + error.getMessage());
             }
+
+            // Log system end time
+            long endTime = System.nanoTime();
+
+            // Calculate the run time of the algorithm
+            long runTime = endTime - startTime;
+
+            double durationMillis = runTime / 1000000.0;
+            double durationSeconds =  runTime / 1000000000.0;
+
+            // Print the runtime of the algorithm
+            System.out.println("Runtime for quick sort on " + fileName + ": " + durationMillis + " ms or " + durationSeconds + " s.");
         }
         catch (FileNotFoundException e) {
             System.out.println("Error: Could not find the file " + args[0]);
