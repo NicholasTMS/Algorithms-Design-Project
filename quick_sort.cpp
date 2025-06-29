@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <ctime>
 using namespace std;
 
@@ -130,7 +131,9 @@ int main() {
     clock_t start = clock();
     quickSort(dataset, 0, rowCount - 1);
     clock_t end = clock();
+    
     double time_taken = double(end - start) / CLOCKS_PER_SEC;
+    double ms = time_taken * 1000.0;
     cout << "Quicksort successfull" << endl;
     // print after sorting
     //cout << "After sorting:\n";
@@ -138,6 +141,7 @@ int main() {
 
     writeDatasetToFile(outputFilename, dataset, rowCount);
     cout << "Sorted dataset succesfully written to output file" << endl;
+    cout << fixed << setprecision(6);
     cout << "Running time: " << time_taken << endl;
     
     delete[] dataset;
