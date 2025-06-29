@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <chrono>
 using namespace std;
 
 struct DataRow {
@@ -128,12 +129,11 @@ int main() {
     //printDataset(dataset, rowCount);
 
     // quicksort
-    clock_t start = clock();
+    auto start = chrono::high_resolution_clock::now();
     quickSort(dataset, 0, rowCount - 1);
-    clock_t end = clock();
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
     
-    double time_taken = double(end - start) / CLOCKS_PER_SEC;
-    double ms = time_taken * 1000.0;
     cout << "Quicksort successfull" << endl;
     // print after sorting
     //cout << "After sorting:\n";
@@ -142,7 +142,7 @@ int main() {
     writeDatasetToFile(outputFilename, dataset, rowCount);
     cout << "Sorted dataset succesfully written to output file" << endl;
     cout << fixed << setprecision(6);
-    cout << "Running time: " << time_taken << endl;
+    cout << "Running time: " << duration.count() << endl;
     
     delete[] dataset;
     return 0;
