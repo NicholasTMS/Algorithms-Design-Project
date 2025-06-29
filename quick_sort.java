@@ -52,7 +52,7 @@ public class quick_sort {
             // Write the sorted array into the CSV file
             try {
                 String[] splitFileName = fileName.split("_");
-                FileWriter writer = new FileWriter("quick_sort" + "_" + splitFileName[2]);
+                FileWriter writer = new FileWriter("quick_sort" + "_" + splitFileName[splitFileName.length - 1]);
 
                 for (DataRow dataRow : dataList) {
                     writer.write(dataRow.getNumbers() + "," + dataRow.getCharacters() + "\n");
