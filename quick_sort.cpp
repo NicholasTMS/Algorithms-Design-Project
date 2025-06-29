@@ -5,7 +5,7 @@
 using namespace std;
 
 struct DataRow {
-    int number;
+    long long number;
     string text;
 };
 
@@ -18,7 +18,7 @@ void swap(DataRow &a, DataRow &b) {
 
 // partition 
 int partition(DataRow arr[], int low, int high) {
-    int pivot = arr[high].number;
+    long long pivot = arr[high].number;
     int i = low - 1;
 
     for (int j = low; j < high; ++j) {
@@ -64,7 +64,7 @@ void readCSVToArray(const string &filename, DataRow arr[], int rowCount) {
         string numStr, text;
         getline(ss, numStr, ',');
         getline(ss, text);
-        arr[idx].number = stoi(numStr);
+        arr[idx].number = stoll(numStr);
         arr[idx].text = text;
         ++idx;
     }
@@ -93,19 +93,22 @@ int main() {
     
     int choice;
     //determine which dataset is being used
-    cout << "Select dataset to be used: \n 1. dataset_sample_1000.csv \n 2. dataset_1000000.csv" << endl;
+    cout << "Select dataset to be used: \n 1. dataset_sample_1000.csv \n 2. Other \nEnter choice: ";
     cin >> choice;
     cout << endl;
     
-    if(choice = 1){
+    if(choice == 1){
         filename = "dataset_sample_1000.csv";
         outputFilename = "quick_sort_1000.csv";
     }
     else{
-        filename = "dataset_1000000.csv";
-        outputFilename = "quick_sort_1000000.csv";
+        int size;
+        cout << "Enter dataset size: ";
+        cin >> size;
+        filename = "dataset_" + to_string(size) + ".csv";
+        outputFilename = "quick_sort_" + to_string(size) + ".csv";
     }
-
+    
     // determine rows in the file
     int rowCount = countRows(filename);
     if (rowCount <= 0) {
@@ -115,10 +118,10 @@ int main() {
 
     // create an array of that size
     DataRow *dataset = new DataRow[rowCount];
-
+    
     // read the csv file
     readCSVToArray(filename, dataset, rowCount);
-
+    
     // print before sorting
     //cout << "Before sorting:\n";
     //printDataset(dataset, rowCount);
@@ -127,15 +130,15 @@ int main() {
     clock_t start = clock();
     quickSort(dataset, 0, rowCount - 1);
     clock_t end = clock();
-    cout << "Quicksort successfull" << endl;
     double time_taken = double(end - start) / CLOCKS_PER_SEC;
-
+    cout << "Quicksort successfull" << endl;
     // print after sorting
     //cout << "After sorting:\n";
     //printDataset(dataset, rowCount);
 
     writeDatasetToFile(outputFilename, dataset, rowCount);
     cout << "Sorted dataset succesfully written to output file" << endl;
+    cout << "Running time: " << time_taken << endl;
     
     delete[] dataset;
     return 0;
