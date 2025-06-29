@@ -3,15 +3,14 @@
 #include <string>
 #include <algorithm>  
 #include <iterator>   
+#include <chrono>      // for timing
 
 using namespace std;
-
 
 struct Data {
     long key;
     string value;
 };
-
 
 template<typename RandomIt, typename Compare>
 void merge_range(RandomIt first, RandomIt mid, RandomIt last, Compare comp) {
@@ -25,14 +24,12 @@ void merge_range(RandomIt first, RandomIt mid, RandomIt last, Compare comp) {
         else
             buffer.push_back(*j++);
     }
-    
+
     buffer.insert(buffer.end(), i, mid);
     buffer.insert(buffer.end(), j, last);
 
-    
     move(buffer.begin(), buffer.end(), first);
 }
-
 
 template<typename RandomIt, typename Compare>
 void merge_sort(RandomIt first, RandomIt last, Compare comp) {
@@ -51,7 +48,7 @@ int main(){
     vector<Data> vec;
     string line;
 
-    // Read each line "number,string"
+    // Read each line "number,string" from stdin
     while (getline(cin, line)) {
         if (line.empty()) continue;
         auto comma = line.find(',');
@@ -62,11 +59,22 @@ int main(){
         vec.push_back(move(d));
     }
 
-    
+    //  Timing starts here 
+    auto t0 = chrono::high_resolution_clock::now();
+
     merge_sort(vec.begin(), vec.end(),
                [](auto &a, auto &b){ return a.key < b.key; });
 
-    // Print out sorted
+    auto t1 = chrono::high_resolution_clock::now();
+    //Timing ends here 
+
+    double elapsed_ms =
+        chrono::duration<double, milli>(t1 - t0).count();
+
+    cerr << "Merge sort elapsed time: " 
+         << elapsed_ms << " ms\n";
+
+    // Print out sorted data
     for (auto &d : vec) {
         cout << d.key << "," << d.value << "\n";
     }
