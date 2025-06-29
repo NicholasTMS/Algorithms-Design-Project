@@ -3,15 +3,15 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 class DataRow {
-    int numbers;
+    long numbers;
     String characters;
 
-    DataRow(int num, String chars) {
+    DataRow(long num, String chars) {
         numbers = num;
         characters = chars;
     }
 
-    public int getNumbers() {
+    public long getNumbers() {
         return numbers;
     }
 
@@ -42,7 +42,7 @@ public class quick_sort {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String[] splitLine = line.split(",");
-                DataRow d = new DataRow(Integer.parseInt(splitLine[0]), splitLine[1]);
+                DataRow d = new DataRow(Long.parseLong(splitLine[0]), splitLine[1]);
                 dataList.add(d);
             }
 
