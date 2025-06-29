@@ -17,7 +17,7 @@ class MergeSortStep {
 
         @Override
         public String toString() {
-            return number + "/" + text;
+            return number + "," + text;
         }
 
         @Override
@@ -70,12 +70,13 @@ class MergeSortStep {
 
         if (startLine > endLine) {
             System.out.println("Error: Starting line cannot be greater than ending line.");
+            return;
         }
 
         ArrayList<DataPair> dataset = new ArrayList<>();
         File file = new File("dataset.csv");
 
-        try (PrintWriter writer = new PrintWriter("merge_sort_step_" + startLine + "_" + endLine + ".txt")) {
+        try (PrintWriter writer = new PrintWriter("merge_sort_step_" + startLine + "_" + endLine +  ".txt")) {
             Scanner fileScanner = new Scanner(file);
             int currentLine = 0;
             while (fileScanner.hasNextLine()) {

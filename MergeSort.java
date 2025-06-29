@@ -20,12 +20,12 @@ class MergeSort {
 
         @Override
         public String toString() {
-            return number + "/" + text;
+            return number + "," + text;
         }
 
         // Method to format as CSV line
         String toCSV() {
-            return number + "/" + text;
+            return number + "," + text;
         }
     }
 
