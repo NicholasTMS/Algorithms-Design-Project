@@ -65,14 +65,10 @@ void generate_dataset(int amount, const string &filename)
     auto all_strings = generate_all_possible_strings(min_str_len, max_str_len);
     cout << "Generated " << all_strings.size() << " possible strings" << endl;
 
-    // Shuffle the strings for random selection
-    cout << "Shuffling strings..." << endl;
+    // Initialize random number generators
     random_device rd;
-    mt19937 g(rd());
-    shuffle(all_strings.begin(), all_strings.end(), g);
-
-    // Initialize random number generator
-    mt19937 generator(rd());
+    mt19937 gen(rd());
+    uniform_int_distribution<size_t> str_distribution(0, all_strings.size() - 1);
     uniform_int_distribution<uint32_t> num_distribution(1000000001, numeric_limits<uint32_t>::max());
 
     // Open output file
@@ -89,13 +85,12 @@ void generate_dataset(int amount, const string &filename)
     cout << "Generating " << amount << " records..." << endl;
     auto start_time = high_resolution_clock::now();
     auto last_report_time = start_time;
-    size_t strings_used = 0;
     int duplicates_skipped = 0;
 
     for (int i = 0; i < amount;)
     {
         // Generate unique number
-        uint32_t number = num_distribution(generator);
+        uint32_t number = num_distribution(gen);
         if (used_numbers.count(number))
         {
             duplicates_skipped++;
@@ -103,13 +98,8 @@ void generate_dataset(int amount, const string &filename)
         }
         used_numbers.insert(number);
 
-        // Get next unique string
-        if (strings_used >= all_strings.size())
-        {
-            cerr << "Error: Ran out of unique strings!" << endl;
-            break;
-        }
-        string str = all_strings[strings_used++];
+        // Get random string (can be repeated)
+        string str = all_strings[str_distribution(gen)];
 
         // Write to file
         file << number << "," << str << "\n";
@@ -133,32 +123,29 @@ void generate_dataset(int amount, const string &filename)
 
     file.close();
 
-    // debugging purposes
+    auto end_time = high_resolution_clock::now();
+    auto duration = end_time - start_time;
+    auto duration_sec = duration_cast<seconds>(duration).count();
+    auto duration_ms = duration_cast<milliseconds>(duration).count() % 1000;
 
-    // auto end_time = high_resolution_clock::now();
-    // auto duration = end_time - start_time;
-    // auto duration_sec = duration_cast<seconds>(duration).count();
-    // auto duration_ms = duration_cast<milliseconds>(duration).count() % 1000;
+    cout << "\nGeneration completed!" << endl;
+    cout << "Total time: " << duration_sec << "s " << duration_ms << "ms" << endl;
+    cout << "Total duplicates skipped: " << duplicates_skipped << endl;
+    cout << amount << " unique records written to " << filename << endl;
 
-    // cout << "\nGeneration completed!" << endl;
-    // cout << "Total time: " << duration_sec << "s " << duration_ms << "ms" << endl;
-    // cout << "Total duplicates skipped: " << duplicates_skipped << endl;
-    // cout << "Strings used: " << strings_used << "/" << all_strings.size() << endl;
-    // cout << amount << " unique records written to " << filename << endl;
-
-    // double rate = amount / (duration_sec + duration_ms / 1000.0);
-    // if (rate > 1000000)
-    // {
-    //     cout << "Generation rate: " << rate / 1000000 << " million records/second" << endl;
-    // }
-    // else if (rate > 1000)
-    // {
-    //     cout << "Generation rate: " << rate / 1000 << " thousand records/second" << endl;
-    // }
-    // else
-    // {
-    //     cout << "Generation rate: " << rate << " records/second" << endl;
-    // }
+    double rate = amount / (duration_sec + duration_ms / 1000.0);
+    if (rate > 1000000)
+    {
+        cout << "Generation rate: " << rate / 1000000 << " million records/second" << endl;
+    }
+    else if (rate > 1000)
+    {
+        cout << "Generation rate: " << rate / 1000 << " thousand records/second" << endl;
+    }
+    else
+    {
+        cout << "Generation rate: " << rate << " records/second" << endl;
+    }
 }
 
 int main()
@@ -168,8 +155,7 @@ int main()
     cout << "Enter dataset size: ";
     cin >> amount;
 
-    // 100 million records
-    const string filename = ("dataset_" + to_string(amount) + ".csv");
+    const string filename = "dataset_" + to_string(amount) + ".csv";
 
     generate_dataset(amount, filename);
 
