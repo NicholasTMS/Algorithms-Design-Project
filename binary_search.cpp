@@ -1,90 +1,72 @@
-// binary_search_step.cpp
+// binary_search_timed.cpp
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>     // for timing
 
-// A simple struct to hold one row of our dataset
 struct DataRow {
     int number;
     std::string text;
 };
 
-// Reads a CSV with format “number,text” into `data`.
-// Returns false on open failure.
 bool readCSV(const std::string& filename, std::vector<DataRow>& data) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Error: could not open \"" << filename << "\"\n";
         return false;
     }
-
     std::string line;
     while (std::getline(file, line)) {
         if (line.empty()) continue;
         std::stringstream ss(line);
-        std::string numStr, text;
-        if (!std::getline(ss, numStr, ',') || !std::getline(ss, text))
-            continue;  // skip malformed lines
-
+        std::string numStr, txt;
+        if (!std::getline(ss, numStr, '/') ||
+            !std::getline(ss, txt))
+            continue;  // skip malformed
         try {
             DataRow row;
             row.number = std::stoi(numStr);
-            row.text = std::move(text);
+            row.text   = std::move(txt);
             data.push_back(std::move(row));
         } catch (...) {
-            // skip non-integer values
+            // skip bad lines
         }
     }
-
     return true;
 }
 
-// Performs binary search on data[].number for `target`.
-// Logs each probe (index & value) to `logFilename`, then exits upon found or exhausted.
-void binarySearchStep(const std::vector<DataRow>& data,
-                      int target,
-                      const std::string& logFilename)
-{
-    std::ofstream logFile(logFilename);
-    if (!logFile.is_open()) {
-        std::cerr << "Warning: could not open log file \"" << logFilename << "\" for writing\n";
-        return;
-    }
-
-    int low = 0;
+int binarySearch(const std::vector<DataRow>& data, int target) {
+    int low  = 0;
     int high = static_cast<int>(data.size()) - 1;
-    int step = 1;
-
     while (low <= high) {
         int mid = low + (high - low) / 2;
-        // Log the current step:
-        logFile << step++ << ": index=" << mid
-                << ", value=" << data[mid].number
-                << " / \"" << data[mid].text << "\"\n";
-
         if (data[mid].number == target) {
-            // Found — stop logging
-            return;
+            return mid;
         } else if (data[mid].number < target) {
             low = mid + 1;
         } else {
             high = mid - 1;
         }
     }
-
-    // Not found
-    logFile << "-1\n";
+    return -1;
 }
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <sorted_dataset.csv> <target_integer>\n";
+        std::cerr << "Usage: " << argv[0]
+                  << " <sorted_dataset.csv> <target_integer>\n";
         return 1;
     }
 
-    std::string datasetFile = argv[1];
+    // 1) Load data
+    std::vector<DataRow> data;
+    if (!readCSV(argv[1], data)) {
+        return 1;
+    }
+
+    // 2) Parse target
     int target;
     try {
         target = std::stoi(argv[2]);
@@ -93,17 +75,25 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 1. Read the sorted CSV into memory
-    std::vector<DataRow> data;
-    if (!readCSV(datasetFile, data)) {
-        return 1;
+    // 3) Time the binary search
+    auto t0 = std::chrono::high_resolution_clock::now();
+    int index = binarySearch(data, target);
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    // 4) Compute elapsed ms
+    double elapsed_ms =
+        std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+    // 5) Report
+    std::cout << "Search time: " << elapsed_ms << " ms\n";
+    if (index >= 0) {
+        std::cout << "Found target at index: " << index << "\n";
+        std::cout << "Value/text: "
+                  << data[index].number
+                  << " / \"" << data[index].text << "\"\n";
+    } else {
+        std::cout << "Target not found\n";
     }
 
-    // 2. Build the log filename and perform the search
-    std::string logFile = "binary_search_step_" + std::to_string(target) + ".txt";
-    binarySearchStep(data, target, logFile);
-
-    // 3. Inform the user
-    std::cout << "Detailed steps logged to: " << logFile << "\n";
     return 0;
 }
