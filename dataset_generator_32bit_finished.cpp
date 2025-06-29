@@ -1,92 +1,172 @@
 #include <iostream>
-
 #include <fstream>
-
-#include <random>        // used for mt199937 (pseudo random number generator with very big potential values, very nice, very good, 10/10)
-#include <unordered_set> // used to stored the values, using unordered_set cuz it'll ignore duplicate values.
-
-#include <string> // obv. if you ask.... man...
+#include <random>
+#include <chrono>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <unordered_set>
+#include <cmath>
 
 using namespace std;
+using namespace std::chrono;
 
-unordered_set<uint32_t> random_num(int size)
+vector<string> generate_all_possible_strings(int min_len, int max_len)
 {
-    // cout << "Generator" << endl;
+    const string chars = "abcdefghijklmnopqrstuvwxyz";
+    vector<string> all_strings;
 
-    random_device seed;
-    mt19937 generator(seed());
-    uniform_int_distribution<uint32_t> distribution;
-
-    unordered_set<uint32_t> unique_nums;
-    while (unique_nums.size() < size)
+    // Calculate total number of possible strings
+    size_t total = 0;
+    for (int len = min_len; len <= max_len; len++)
     {
-        // cout << "Generating" << endl;
+        total += static_cast<size_t>(pow(chars.size(), len));
+    }
+    all_strings.reserve(total);
 
-        uint32_t random_val = distribution(generator);
-
-        if (random_val <= 1000000000)
+    // Generate all possible combinations
+    for (int len = min_len; len <= max_len; len++)
+    {
+        string s(len, 'a');
+        bool more = true;
+        while (more)
         {
-            continue;
-        }
+            all_strings.push_back(s);
 
-        unique_nums.insert(random_val);
+            // Increment the string like a number
+            more = false;
+            for (int i = len - 1; i >= 0; --i)
+            {
+                if (s[i] < 'z')
+                {
+                    s[i]++;
+                    more = true;
+                    break;
+                }
+                else
+                {
+                    s[i] = 'a';
+                }
+            }
+        }
     }
 
-    cout << "unique 32-Bit integer generated!" << endl;
-
-    return unique_nums;
+    return all_strings;
 }
 
-unordered_set<string> random_str(int size)
+void generate_dataset(int amount, const string &filename)
 {
-    random_device seed;
-    mt19937 generator(seed());
-    uniform_int_distribution<char> char_distribution{'a', 'z'};
-    uniform_int_distribution<int> len_distribution(4, 5);
+    const int min_str_len = 4;
+    const int max_str_len = 5;
 
-    unordered_set<string> unique_str;
-    while (unique_str.size() < size)
+    // Pre-generate all possible strings (4-5 chars)
+    cout << "Generating all possible " << min_str_len << "-" << max_str_len
+         << " character strings..." << endl;
+    auto all_strings = generate_all_possible_strings(min_str_len, max_str_len);
+    cout << "Generated " << all_strings.size() << " possible strings" << endl;
+
+    // Shuffle the strings for random selection
+    cout << "Shuffling strings..." << endl;
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(all_strings.begin(), all_strings.end(), g);
+
+    // Initialize random number generator
+    mt19937 generator(rd());
+    uniform_int_distribution<uint32_t> num_distribution(1000000001, numeric_limits<uint32_t>::max());
+
+    // Open output file
+    ofstream file(filename);
+    if (!file.is_open())
     {
-        int length = len_distribution(generator);
-        string str;
-        str.reserve(length);
-
-        for (int i = 0; i < length; ++i)
-        {
-            str.push_back(char_distribution(generator));
-        }
-
-        unique_str.insert(str);
+        cerr << "Failed to open output file!" << endl;
+        return;
     }
 
-    cout << "unique String generated!" << endl;
+    unordered_set<uint32_t> used_numbers;
+    used_numbers.reserve(amount);
 
-    return unique_str;
+    cout << "Generating " << amount << " records..." << endl;
+    auto start_time = high_resolution_clock::now();
+    auto last_report_time = start_time;
+    size_t strings_used = 0;
+    int duplicates_skipped = 0;
+
+    for (int i = 0; i < amount;)
+    {
+        // Generate unique number
+        uint32_t number = num_distribution(generator);
+        if (used_numbers.count(number))
+        {
+            duplicates_skipped++;
+            continue;
+        }
+        used_numbers.insert(number);
+
+        // Get next unique string
+        if (strings_used >= all_strings.size())
+        {
+            cerr << "Error: Ran out of unique strings!" << endl;
+            break;
+        }
+        string str = all_strings[strings_used++];
+
+        // Write to file
+        file << number << "/" << str << "\n";
+        i++;
+
+        // Progress reporting
+        auto current_time = high_resolution_clock::now();
+        if (i % 1000000 == 0 ||
+            duration_cast<seconds>(current_time - last_report_time).count() >= 5)
+        {
+            last_report_time = current_time;
+
+            auto elapsed = current_time - start_time;
+            auto elapsed_sec = duration_cast<seconds>(elapsed).count();
+            auto elapsed_ms = duration_cast<milliseconds>(elapsed).count() % 1000;
+
+            cout << "Generated " << i << " records ("
+                 << elapsed_sec << "s " << elapsed_ms << "ms elapsed)" << endl;
+        }
+    }
+
+    file.close();
+
+    // debugging purposes
+
+    // auto end_time = high_resolution_clock::now();
+    // auto duration = end_time - start_time;
+    // auto duration_sec = duration_cast<seconds>(duration).count();
+    // auto duration_ms = duration_cast<milliseconds>(duration).count() % 1000;
+
+    // cout << "\nGeneration completed!" << endl;
+    // cout << "Total time: " << duration_sec << "s " << duration_ms << "ms" << endl;
+    // cout << "Total duplicates skipped: " << duplicates_skipped << endl;
+    // cout << "Strings used: " << strings_used << "/" << all_strings.size() << endl;
+    // cout << amount << " unique records written to " << filename << endl;
+
+    // double rate = amount / (duration_sec + duration_ms / 1000.0);
+    // if (rate > 1000000)
+    // {
+    //     cout << "Generation rate: " << rate / 1000000 << " million records/second" << endl;
+    // }
+    // else if (rate > 1000)
+    // {
+    //     cout << "Generation rate: " << rate / 1000 << " thousand records/second" << endl;
+    // }
+    // else
+    // {
+    //     cout << "Generation rate: " << rate << " records/second" << endl;
+    // }
 }
 
 int main()
 {
+    const int amount = 10000000; // 100 million records
+    const string filename = "dataset.csv";
 
-    int amount = 100000000;
-
-    unordered_set<uint32_t> numbers = random_num(amount);
-    unordered_set<string> strings = random_str(amount);
-
-    ofstream file;
-
-    file.open("dataset.csv", ios::out);
-
-    // Generate combined output (number,string pairs)
-    auto num_it = numbers.begin();
-    auto str_it = strings.begin();
-
-    for (int i = 0; i < amount && num_it != numbers.end() && str_it != strings.end(); ++i, ++num_it, ++str_it)
-    {
-        // cout << "Line " << i + 1 << " : " << *num_it << "/" << *str_it << endl;
-        file << *num_it << "/" << *str_it << endl;
-    }
-
-    cout << amount << " data generated in Dataset.csv" << endl;
+    generate_dataset(amount, filename);
 
     return 0;
 }
