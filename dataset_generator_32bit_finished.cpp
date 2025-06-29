@@ -163,8 +163,13 @@ void generate_dataset(int amount, const string &filename)
 
 int main()
 {
-    const int amount = 10000000; // 100 million records
-    const string filename = "dataset.csv";
+    int amount = 0;
+
+    cout << "Enter dataset size: ";
+    cin >> amount;
+
+    // 100 million records
+    const string filename = ("dataset_" + to_string(amount) + ".csv");
 
     generate_dataset(amount, filename);
 
