@@ -1,6 +1,7 @@
 // merge_sort_timed.cpp
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -42,31 +43,37 @@ template<typename RandomIt, typename Compare>
 void merge_sort(RandomIt first, RandomIt last, Compare comp) {
     auto len = distance(first, last);
     if (len <= 1) return;
-
-    RandomIt mid = first + len / 2;
+    RandomIt mid = first + len/2;
     merge_sort(first, mid, comp);
     merge_sort(mid, last, comp);
     merge_range(first, mid, last, comp);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
+    if (argc != 2) {
+        cerr << "Usage: " << argv[0] << " <dataset.csv>\n";
+        return 1;
+    }
+
+    // 1) Open the input file
+    ifstream in(argv[1]);
+    if (!in) {
+        cerr << "Error: could not open \"" << argv[1] << "\"\n";
+        return 1;
+    }
+
+    // 2) Read and parse each line "number/value"
     vector<Data> vec;
     string line;
-
-    // 1) Read input from stdin, each line is "number/string"
-    while (getline(cin, line)) {
+    while (getline(in, line)) {
         if (line.empty()) continue;
-
-        // split on '/'
         auto sep = line.find('/');
-        if (sep == string::npos) continue;  // skip malformed
-
+        if (sep == string::npos) continue;  // skip bad lines
         string numPart = line.substr(0, sep);
         string txtPart = line.substr(sep + 1);
-
         try {
             Data d;
             d.key   = stol(numPart);
@@ -78,22 +85,20 @@ int main() {
         }
     }
 
-    // 2) Time the merge-sort
+    // 3) Time the merge_sort
     auto t0 = chrono::high_resolution_clock::now();
-
     merge_sort(vec.begin(), vec.end(),
-               [](auto &a, auto &b){ return a.key < b.key; });
-
+               [](const Data &a, const Data &b){ return a.key < b.key; });
     auto t1 = chrono::high_resolution_clock::now();
 
     double elapsed_ms =
         chrono::duration<double, milli>(t1 - t0).count();
 
-    // Print timing to stderr so stdout stays clean
+    // 4) Report timing to stderr
     cerr << "Merge sort elapsed time: "
          << elapsed_ms << " ms\n";
 
-    // 3) Output the sorted data to stdout
+    // 5) Output sorted data to stdout
     for (auto &d : vec) {
         cout << d.key << "/" << d.value << "\n";
     }
