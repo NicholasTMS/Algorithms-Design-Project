@@ -112,7 +112,7 @@ void generate_dataset(int amount, const string &filename)
         string str = all_strings[strings_used++];
 
         // Write to file
-        file << number << "/" << str << "\n";
+        file << number << "," << str << "\n";
         i++;
 
         // Progress reporting
