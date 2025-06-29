@@ -52,7 +52,7 @@ public class quick_sort_step {
             ArrayList<DataRow> subsetDataList = new ArrayList<>(dataList.subList(startRow, endRow + 1));
 
             sortingSteps.setLength(0);
-            sortingSteps.append("Original subset: ").append(dataRowListToString(subsetDataList)).append("\n\n");
+            sortingSteps.append(dataRowListToString(subsetDataList)).append("\n");
 
             // Run quick sort on the sublist
             quickSort(subsetDataList);
@@ -83,12 +83,10 @@ public class quick_sort_step {
 
     public static void quickSort(ArrayList<DataRow> dataList, int low, int high) {
         if (low < high) {
-            sortingSteps.append("Sorting subarray: ").append(dataRowListToString(
-                    new ArrayList<>(dataList.subList(low, high + 1)))).append("\n");
-
             int pivotIndex = partition(dataList, low, high);
 
-            sortingSteps.append("After partition, array is: ").append(dataRowListToString(dataList)).append("\n\n");
+            sortingSteps.append("pi: ").append(pivotIndex);
+            sortingSteps.append(" ").append(dataRowListToString(dataList)).append("\n");
 
             quickSort(dataList, low, pivotIndex - 1);
             quickSort(dataList, pivotIndex + 1, high);
@@ -98,7 +96,6 @@ public class quick_sort_step {
     public static int partition(ArrayList<DataRow> dataList, int low, int high) {
         // Choose pivot
         DataRow pivot = dataList.get(high);
-        sortingSteps.append("Choose pivot: ").append(pivot.getNumbers()).append("\n");
 
         int i = low - 1;
 
@@ -121,8 +118,6 @@ public class quick_sort_step {
         dataList.set(i + 1, dataList.get(high));
         dataList.set(high, temp);
 
-        sortingSteps.append("Place pivot at position ").append(i + 1).append("\n");
-
         // Create left and right partitions for clarity
         ArrayList<DataRow> leftPart = new ArrayList<>();
         for (int k = low; k <= i; k++) {
@@ -133,11 +128,6 @@ public class quick_sort_step {
         for (int k = i + 2; k <= high; k++) {
             rightPart.add(dataList.get(k));
         }
-
-        sortingSteps.append("Partition: ")
-                .append(dataRowListToString(leftPart)).append(", ")
-                .append(dataList.get(i + 1).getNumbers()).append(", ")
-                .append(dataRowListToString(rightPart)).append("\n");
 
         return i + 1;
     }
