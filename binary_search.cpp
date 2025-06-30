@@ -1,118 +1,175 @@
-// binary_search.cpp
-
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <chrono>
 #include <limits>
-#include <sstream>
 #include <iomanip>
 
-struct DataRow {
-    long key;
-    std::string text;
+using namespace std;
+using namespace std::chrono;
+
+struct Record
+{
+    string id;
+    string value;
+
+    Record(const string &id, const string &value) : id(id), value(value) {}
+
+    bool operator<(const Record &other) const
+    {
+        return id < other.id;
+    }
 };
 
-bool readCSV(const std::string &fname, std::vector<DataRow> &out) {
-    std::ifstream in(fname);
-    if (!in) return false;
-    std::string line;
-    while (std::getline(in, line)) {
-        auto sep = line.find(',');
-        if (sep == std::string::npos) continue;
-        try {
-            long k = std::stol(line.substr(0, sep));
-            out.push_back({k, line.substr(sep+1)});
-        } catch (...) {}
+vector<Record> readCSV(const string &filePath)
+{
+    vector<Record> records;
+    ifstream file(filePath);
+
+    if (!file.is_open())
+    {
+        throw runtime_error("Could not open file: " + filePath);
     }
-    return true;
-}
 
-int binarySearch(const std::vector<DataRow> &A, long target) {
-    int lo = 0, hi = (int)A.size() - 1;
-    while (lo <= hi) {
-        int mid = lo + (hi - lo)/2;
-        if (A[mid].key == target)      return mid;
-        else if (A[mid].key < target)  lo = mid + 1;
-        else                            hi = mid - 1;
+    string line;
+    while (getline(file, line))
+    {
+        size_t commaPos = line.find(',');
+        if (commaPos != string::npos)
+        {
+            string id = line.substr(0, commaPos);
+            string value = line.substr(commaPos + 1);
+            // Trim whitespace
+            id.erase(0, id.find_first_not_of(" \t"));
+            id.erase(id.find_last_not_of(" \t") + 1);
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+            records.emplace_back(id, value);
+        }
     }
-    return -1;
+
+    // Verify the records are sorted by ID
+    for (size_t i = 1; i < records.size(); i++)
+    {
+        if (records[i - 1].id > records[i].id)
+        {
+            throw runtime_error("CSV is not sorted by ID. Problem at line " + to_string(i + 1) +
+                                "\nFound: " + records[i - 1].id +
+                                " before " + records[i].id);
+        }
+    }
+
+    return records;
 }
 
-static std::string commafy(long long x) {
-    std::ostringstream ss;
-    ss.imbue(std::locale(""));
-    ss << x;
-    return ss.str();
+const Record *binarySearch(const vector<Record> &records, const string &targetId)
+{
+    size_t left = 0;
+    size_t right = records.size() - 1;
+
+    while (left <= right)
+    {
+        size_t mid = left + (right - left) / 2;
+        const Record &current = records[mid];
+        int comparison = current.id.compare(targetId);
+
+        if (comparison == 0)
+        {
+            return &current;
+        }
+        else if (comparison < 0)
+        {
+            left = mid + 1;
+        }
+        else
+        {
+            right = mid - 1;
+        }
+    }
+    return nullptr;
 }
 
-int main(){
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr);
+void benchmarkSearch(const vector<Record> &records)
+{
+    long long minTime = numeric_limits<long long>::max();
+    long long maxTime = numeric_limits<long long>::min();
+    long long totalTime = 0;
+    size_t totalSearches = records.size();
 
-    std::cout << "Enter path to sorted CSV file: ";
-    std::string fname;
-    if (!std::getline(std::cin, fname) || fname.empty()) {
-        std::cerr << "No filename\n";
+    cout << "\nRunning benchmark (" << totalSearches << " searches)..." << endl;
+
+    // Warm up
+    cout << "Warming up...";
+    size_t warmupCount = min(1000, static_cast<int>(records.size()));
+    for (size_t i = 0; i < warmupCount; i++)
+    {
+        binarySearch(records, records[i].id);
+    }
+    cout << " done." << endl;
+
+    // Main benchmarking
+    for (const auto &record : records)
+    {
+        auto start = high_resolution_clock::now();
+        const Record *found = binarySearch(records, record.id);
+        auto end = high_resolution_clock::now();
+        auto duration = duration_cast<nanoseconds>(end - start).count();
+
+        if (found == nullptr || found->id != record.id)
+        {
+            cerr << "Search failed for ID: " << record.id << endl;
+            continue;
+        }
+
+        minTime = min(minTime, duration);
+        maxTime = max(maxTime, duration);
+        totalTime += duration;
+    }
+
+    // Calculate statistics
+    double avgTime = static_cast<double>(totalTime) / totalSearches;
+    double minMs = minTime / 1'000'000.0;
+    double maxMs = maxTime / 1'000'000.0;
+    double avgMs = avgTime / 1'000'000.0;
+
+    // Display performance metrics
+    cout << "\nPerformance Metrics:" << endl;
+    cout << "--------------------------------" << endl;
+    cout << "Dataset size:    " << setw(12) << totalSearches << " records" << endl;
+    cout << "Best case:       " << setw(12) << minTime << " ns (" << fixed << setprecision(6) << minMs << " ms)" << endl;
+    cout << "Worst case:      " << setw(12) << maxTime << " ns (" << fixed << setprecision(6) << maxMs << " ms)" << endl;
+    cout << "Average:         " << setw(12) << fixed << setprecision(0) << avgTime << " ns ("
+         << fixed << setprecision(6) << avgMs << " ms)" << endl;
+    cout << "--------------------------------" << endl;
+    cout << "Total time:      " << setw(12) << totalTime << " ns (" << fixed << setprecision(3)
+         << totalTime / 1'000'000.0 << " ms)" << endl;
+    cout << "Throughput:      " << setw(12) << fixed << setprecision(1)
+         << totalSearches / (totalTime / 1'000'000.0) << " searches/ms" << endl;
+    cout << "--------------------------------" << endl;
+}
+
+int main()
+{
+    cout << "Enter path to sorted CSV file: ";
+    string filePath;
+    getline(cin, filePath);
+
+    try
+    {
+        // Read and validate the sorted CSV file
+        vector<Record> records = readCSV(filePath);
+        cout << "\nLoaded " << records.size() << " records from: " << filePath << endl;
+
+        // Benchmark search performance
+        benchmarkSearch(records);
+    }
+    catch (const exception &e)
+    {
+        cerr << "\nError: " << e.what() << endl;
         return 1;
     }
-
-    std::vector<DataRow> data;
-    if (!readCSV(fname, data)) {
-        std::cerr << "Error opening " << fname << "\n";
-        return 1;
-    }
-    int N = (int)data.size();
-    std::cout << "Loaded " << commafy(N) << " records from: " << fname << "\n\n";
-
-    std::cout << "Running benchmark (" << commafy(N) << " searches)...\n";
-    // Warm-up
-    for (int i = 0; i < N; ++i)
-        binarySearch(data, data[i].key);
-    std::cout << "Warming up... done.\n\n";
-
-    // Benchmark
-    long long best_ns  = std::numeric_limits<long long>::max();
-    long long worst_ns = 0;
-    long long sum_ns   = 0;
-
-    auto start_all = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < N; ++i) {
-        auto t0 = std::chrono::high_resolution_clock::now();
-        binarySearch(data, data[i].key);
-        auto t1 = std::chrono::high_resolution_clock::now();
-        long long ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-        sum_ns += ns;
-        if (ns < best_ns)  best_ns  = ns;
-        if (ns > worst_ns) worst_ns = ns;
-    }
-    auto end_all = std::chrono::high_resolution_clock::now();
-    long long total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end_all - start_all).count();
-
-    double best_ms    = best_ns  / 1e6;
-    double worst_ms   = worst_ns / 1e6;
-    double avg_ns     = double(sum_ns) / N;
-    double avg_ms     = avg_ns   / 1e6;
-    double total_ms   = total_ns / 1e6;
-    double throughput = N / total_ms;  // searches per ms
-
-    // Output
-    std::cout << "\nPerformance Metrics:\n";
-    std::cout << "--------------------------------\n";
-    std::cout << "Dataset size:  " << commafy(N) << " records\n";
-    std::cout << "Best case:     " << commafy(best_ns)  << " ns"
-              << " (" << std::fixed << std::setprecision(6) << best_ms  << " ms)\n";
-    std::cout << "Worst case:    " << commafy(worst_ns) << " ns"
-              << " (" << std::fixed << std::setprecision(6) << worst_ms << " ms)\n";
-    std::cout << "Average:       " << commafy((long long)avg_ns) << " ns"
-              << " (" << std::fixed << std::setprecision(6) << avg_ms   << " ms)\n";
-    std::cout << "--------------------------------\n";
-    std::cout << "Total time:    " << commafy(total_ns) << " ns"
-              << " (" << std::fixed << std::setprecision(3) << total_ms   << " ms)\n";
-    std::cout << "Throughput:    " << std::fixed << std::setprecision(1)
-              << throughput << " searches/ms\n";
-    std::cout << "--------------------------------\n";
 
     return 0;
 }
