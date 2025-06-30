@@ -27,7 +27,7 @@ bool readCSV(const std::string &filename, std::vector<DataRow> &out) {
             std::string txt = line.substr(sep + 1);
             out.push_back({k, std::move(txt)});
         } catch (...) {
-            // skip bad records
+            // skip malformed lines
         }
     }
     return true;
@@ -64,11 +64,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // ensure the data is sorted by key
-    // (if your input files are already sorted, you can omit this)
-    std::sort(data.begin(), data.end(),
-              [](auto &a, auto &b){ return a.key < b.key; });
-
     // time the search
     auto t0 = std::chrono::high_resolution_clock::now();
     int idx = binarySearch(data, target);
@@ -77,7 +72,7 @@ int main(int argc, char *argv[]) {
     double elapsed_ms =
         std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-    // print the time (ms)
+    // print the time in milliseconds
     std::cout << elapsed_ms << "\n";
 
     return 0;
