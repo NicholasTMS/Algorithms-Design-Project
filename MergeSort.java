@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 class MergeSort {
-    // A class to hold both the number and its corresponding string
     static class DataPair {
         public static int amount = 0;
         long number;
@@ -23,13 +22,11 @@ class MergeSort {
             return number + "," + text;
         }
 
-        // Method to format as CSV line
         String toCSV() {
             return number + "," + text;
         }
     }
 
-    // Merges two subarrays of arr[]
     static void merge(DataPair[] arr, int left_index, int middle_index, int right_index) {
         int left_array_index = middle_index - left_index + 1;
         int right_array_index = right_index - middle_index;
@@ -37,15 +34,12 @@ class MergeSort {
         DataPair[] left_array = new DataPair[left_array_index];
         DataPair[] right_array = new DataPair[right_array_index];
 
-        for (int i = 0; i < left_array_index; ++i) {
+        for (int i = 0; i < left_array_index; ++i)
             left_array[i] = arr[left_index + i];
-        }
-        for (int j = 0; j < right_array_index; ++j) {
+        for (int j = 0; j < right_array_index; ++j)
             right_array[j] = arr[middle_index + 1 + j];
-        }
 
-        int first_left = 0;
-        int first_right = 0;
+        int first_left = 0, first_right = 0;
         int k = left_index;
 
         while (first_left < left_array_index && first_right < right_array_index) {
@@ -83,9 +77,6 @@ class MergeSort {
 
     static void writeToCSV(DataPair[] arr, String filename) {
         try (FileWriter writer = new FileWriter(filename)) {
-            // Write header if needed
-            writer.write("Number,Text\n");
-
             for (DataPair pair : arr) {
                 writer.write(pair.toCSV() + "\n");
             }
@@ -99,13 +90,15 @@ class MergeSort {
     public static void main(String[] a) {
         ArrayList<DataPair> dataset = new ArrayList<>();
 
-        File file = new File("dataset.csv");
+        File file = new File("dataset_50000000.csv");
 
         try {
+            // Timing the file reading process
+            long readStartTime = System.nanoTime();
             Scanner scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                String[] parts = line.split("/");
+                String[] parts = line.split(",");
                 if (parts.length >= 2) {
                     try {
                         long num = Long.parseLong(parts[0]);
@@ -114,26 +107,50 @@ class MergeSort {
                     } catch (NumberFormatException e) {
                         System.out.println("Skipping invalid number: " + parts[0]);
                         continue;
-                        // Skip this line if the number is invalid
                     }
                 }
             }
             scanner.close();
+            long readEndTime = System.nanoTime();
+            long readDuration = readEndTime - readStartTime;
 
-            // Convert ArrayList to array
             DataPair[] arr = new DataPair[dataset.size()];
             arr = dataset.toArray(arr);
 
-            long startTime = System.currentTimeMillis();
+            // Timing the sorting process
+            long sortStartTime = System.nanoTime();
             sort(arr, 0, arr.length - 1);
-            long endTime = System.currentTimeMillis();
+            long sortEndTime = System.nanoTime();
+            long sortDuration = sortEndTime - sortStartTime;
 
-            // Write the sorted data to a new CSV file
+            // Timing the file writing process
+            long writeStartTime = System.nanoTime();
             writeToCSV(arr, ("merge_sort_" + DataPair.amount + ".csv"));
+            long writeEndTime = System.nanoTime();
+            long writeDuration = writeEndTime - writeStartTime;
 
-            long milliseconds = endTime - startTime;
+            // Display detailed timing information
+            System.out.println("\nPerformance Metrics:");
+            System.out.println("--------------------------------");
+            System.out.println("File Reading:");
+            System.out.printf("Nanoseconds: %,d\n", readDuration);
+            System.out.printf("Milliseconds: %.3f\n", readDuration / 1_000_000.0);
 
-            System.out.println("Time taken: " + milliseconds + " Milliseconds");
+            System.out.println("\nSorting:");
+            System.out.printf("Nanoseconds: %,d\n", sortDuration);
+            System.out.printf("Milliseconds: %.3f\n", sortDuration / 1_000_000.0);
+            System.out.printf("Seconds: %.3f\n", sortDuration / 1_000_000_000.0);
+
+            System.out.println("\nFile Writing:");
+            System.out.printf("Nanoseconds: %,d\n", writeDuration);
+            System.out.printf("Milliseconds: %.3f\n", writeDuration / 1_000_000.0);
+
+            System.out.println("\nTotal Time:");
+            long totalDuration = readDuration + sortDuration + writeDuration;
+            System.out.printf("Nanoseconds: %,d\n", totalDuration);
+            System.out.printf("Milliseconds: %.3f\n", totalDuration / 1_000_000.0);
+            System.out.printf("Seconds: %.3f\n", totalDuration / 1_000_000_000.0);
+            System.out.println("--------------------------------");
 
         } catch (FileNotFoundException e) {
             System.out.println("Input file not found");
