@@ -1,22 +1,15 @@
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 class DataRow {
-    long numbers;
-    String characters;
+    public long numbers;
+    public String characters;
 
     DataRow(long num, String chars) {
         numbers = num;
         characters = chars;
-    }
-
-    public long getNumbers() {
-        return numbers;
-    }
-
-    public String getCharacters() {
-        return characters;
     }
 }
 
@@ -30,17 +23,19 @@ public class quick_sort {
         }
 
         String fileName = args[0];
+        String[] splitFileName = fileName.split("_");
+        int fileSize = Integer.parseInt(splitFileName[splitFileName.length - 1].replace(".csv", ""));
 
         File file = new File(fileName);
-        ArrayList<DataRow> dataList = new ArrayList<DataRow>();
+        DataRow[] dataList = new DataRow[fileSize];
 
         try (Scanner scanner = new Scanner(file)) {
             // Reading loop
-            while (scanner.hasNextLine()) {
+            for (int i = 0; i < fileSize; i++) {
                 String line = scanner.nextLine();
                 String[] splitLine = line.split(",");
                 DataRow d = new DataRow(Long.parseLong(splitLine[0]), splitLine[1]);
-                dataList.add(d);
+                dataList[i] = d;
             }
 
             // Log system start time before sort
@@ -54,11 +49,10 @@ public class quick_sort {
 
             // Write the sorted array into the CSV file
             try {
-                String[] splitFileName = fileName.split("_");
                 FileWriter writer = new FileWriter("quick_sort" + "_" + splitFileName[splitFileName.length - 1]);
 
                 for (DataRow dataRow : dataList) {
-                    writer.write(dataRow.getNumbers() + "," + dataRow.getCharacters() + "\n");
+                    writer.write(dataRow.numbers + "," + dataRow.characters + "\n");
                 }
 
                 writer.close();
@@ -82,11 +76,11 @@ public class quick_sort {
         }
     }
 
-    public static void quickSort(ArrayList<DataRow> dataList) {
-        quickSort(dataList, 0, dataList.size() - 1);
+    public static void quickSort(DataRow[] dataList) {
+        quickSort(dataList, 0, dataList.length - 1);
     }
 
-    public static void quickSort(ArrayList<DataRow> dataList, int low, int high) {
+    public static void quickSort(DataRow[] dataList, int low, int high) {
         if (low < high) {
             int pivotIndex = partition(dataList, low, high);
             quickSort(dataList, low, pivotIndex - 1);
@@ -94,29 +88,28 @@ public class quick_sort {
         }
     }
 
-    public static int partition(ArrayList<DataRow> dataList, int low, int high) {
+    public static int partition(DataRow[] dataList, int low, int high) {
         // Choose pivot
-        DataRow pivot = dataList.get(high);
+        DataRow pivot = dataList[high];
 
         int i = low - 1;
 
         for (int j = low; j < high; j++) {
-            if (dataList.get(j).getNumbers() <= pivot.getNumbers()) {
+            if (dataList[j].numbers <= pivot.numbers) {
                 i = i + 1;
 
                 // Swap i and j
-                DataRow temp = dataList.get(i);
-                dataList.set(i, dataList.get(j));
-                dataList.set(j, temp);
+                DataRow temp = dataList[i];
+                dataList[i] = dataList[j];
+                dataList[j] = temp;
             }
         }
 
         // Place pivot in correct position
-        DataRow temp = dataList.get(i + 1);
-        dataList.set(i + 1, dataList.get(high));
-        dataList.set(high, temp);
+        DataRow temp = dataList[i + 1];
+        dataList[i + 1] = dataList[high];
+        dataList[high] = temp;
 
         return i + 1;
     }
 }
-
