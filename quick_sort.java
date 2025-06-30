@@ -29,9 +29,6 @@ public class quick_sort {
             System.exit(1);
         }
 
-        // Log system start time
-        long startTime = System.nanoTime();
-
         String fileName = args[0];
 
         File file = new File(fileName);
@@ -46,8 +43,14 @@ public class quick_sort {
                 dataList.add(d);
             }
 
+            // Log system start time before sort
+            long startTime = System.nanoTime();
+
             // Run quick sort on the data
             quickSort(dataList);
+
+            // Log system end time after sort
+            long endTime = System.nanoTime();
 
             // Write the sorted array into the CSV file
             try {
@@ -63,9 +66,6 @@ public class quick_sort {
             catch (IOException error) {
                 System.out.println("An error occured: " + error.getMessage());
             }
-
-            // Log system end time
-            long endTime = System.nanoTime();
 
             // Calculate the run time of the algorithm
             long runTime = endTime - startTime;
