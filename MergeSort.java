@@ -99,7 +99,7 @@ class MergeSort {
     public static void main(String[] a) {
         ArrayList<DataPair> dataset = new ArrayList<>();
 
-        File file = new File("dataset.csv");
+        File file = new File("dataset_5000000.csv");
 
         try {
             Scanner scanner = new Scanner(file);
